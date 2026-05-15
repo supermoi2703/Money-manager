@@ -15,6 +15,9 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class AppUserDetailsService implements UserDetailsService {
     private final ProfileRepository profileRepository;
+
+    // hàm này sẽ được gọi bởi JwtRequestFilter để lấy thông tin người dùng từ database dựa trên email,
+    // sau đó trả về một UserDetails object chứa thông tin người dùng và quyền hạn (authorities)
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         ProfileEntity existingProfile = profileRepository.findByEmail(email)

@@ -6,6 +6,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -76,4 +77,14 @@ public class JwtUtil {
         }
     }
 
+    // lấy username từ token (trong trường hợp này là email)
+    public String extractUsername(String jwt) {
+        return getEmailFromToken(jwt);
+    }
+
+    // kiểm tra token có hợp lệ hay không dựa trên thông tin userDetails
+    public boolean validateToken(String jwt, UserDetails userDetails) {
+        String email = extractUsername(jwt);
+        return (email.equals(userDetails.getUsername()) && !isTokenExpired(jwt));
+    }
 }
