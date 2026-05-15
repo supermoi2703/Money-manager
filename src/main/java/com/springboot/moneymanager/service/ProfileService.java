@@ -1,15 +1,19 @@
 package com.springboot.moneymanager.service;
 
+import com.springboot.moneymanager.dto.AuthDTO;
 import com.springboot.moneymanager.dto.ProfileDTO;
 import com.springboot.moneymanager.entity.ProfileEntity;
 import com.springboot.moneymanager.repository.ProfileRepository;
+import com.springboot.moneymanager.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.net.Authenticator;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -18,7 +22,8 @@ public class ProfileService {
     private final MailService mailService;
     private final ProfileRepository profileRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
 
     public ProfileDTO registerProfile(ProfileDTO profileDTO) {
         ProfileEntity newProfile = toEntity(profileDTO);
@@ -96,5 +101,19 @@ public class ProfileService {
                 .createdAt(currentUser.getCreatedAt())
                 .updatedAt(currentUser.getUpdatedAt())
                 .build();
+    }
+
+    public Map<String, Object> authenticateAndGenerateToken(AuthDTO authDTO) {
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authDTO.getEmail(), authDTO.getPassword()));
+            //Generate token
+            String token = jwtUtil.generateToken(authDTO.getEmail());
+            return Map.of(
+                    "token", token,
+                    "user", getPublicProfile(authDTO.getEmail())
+            );
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
