@@ -6,10 +6,9 @@ import com.springboot.moneymanager.service.IncomeService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -21,5 +20,17 @@ public class IncomeController {
     public ResponseEntity<IncomeDTO> addExpense(@RequestBody IncomeDTO incomeDTO) {
         IncomeDTO createdIncome = incomeService.addIncome(incomeDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdIncome);
+    }
+
+    @GetMapping("/current-month")
+    public ResponseEntity<List<IncomeDTO>> getCurrentMonthIncomesForCurrentUser() {
+        List<IncomeDTO> incomes = incomeService.getCurrentMonthIncomesForCurrentUser();
+        return ResponseEntity.ok(incomes);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteExpense(@PathVariable Long id) {
+        incomeService.deleteIncome(id);
+        return ResponseEntity.noContent().build();
     }
 }
