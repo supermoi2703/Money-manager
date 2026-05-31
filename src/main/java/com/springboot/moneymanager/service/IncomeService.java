@@ -11,6 +11,10 @@ import com.springboot.moneymanager.repository.IncomeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class IncomeService {
@@ -32,6 +36,43 @@ public class IncomeService {
         return toDTO(newIncome);
     }
 
+    // Hàm lấy tất cả thu nhập của người dùng hiện tại trong tháng hiện tại
+    public List<IncomeDTO> getCurrentMonthIncomesForCurrentUser() {
+        ProfileEntity profile = profileService.getCurrentProfile();
+        LocalDate now = LocalDate.now();
+        LocalDate startDate = now.withDayOfMonth(1);
+        LocalDate endDate = now.withDayOfMonth(now.lengthOfMonth());
+        List<IncomeEntity> incomes = incomeRepository.findByProfileIdAndDateBetween(profile.getId(), startDate, endDate);
+        return incomes.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    // Hàm xóa thu nhập
+    public void deleteIncome(Long incomeId) {
+        ProfileEntity profile = profileService.getCurrentProfile();
+        IncomeEntity income = incomeRepository.findById(incomeId)
+                .orElseThrow(() -> new RuntimeException("income not found"));
+        if (!income.getProfile().getId().equals(profile.getId())){
+            throw new RuntimeException("You are not authorized to delete this income");
+        }
+        incomeRepository.delete(income);
+    }
+
+    // Hàm lấy 5 thu nhập mới nhất của người dùng hiện tại
+    public List<IncomeDTO> getLastest5IncomesForCurrentUser() {
+        ProfileEntity profile = profileService.getCurrentProfile();
+        List<IncomeEntity> incomes = incomeRepository.findTop5ByProfileIdOrderByDateDesc(profile.getId());
+        return incomes.stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    // Hàm tính tổng thu nhập của người dùng hiện tại
+    public BigDecimal getTotalIncomeForCurrentUser() {
+        ProfileEntity profile = profileService.getCurrentProfile();
+        return incomeRepository.findTotalExpenseByProfileId(profile.getId());
+    }
 
     private IncomeEntity toEntity(IncomeDTO incomeDTO, ProfileEntity profile, CategoryEntity category) {
         return IncomeEntity.builder()
